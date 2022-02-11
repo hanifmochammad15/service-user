@@ -19,10 +19,21 @@ class User extends Authenticatable
      */
     protected $table = 'user_data';
 
+    public $timestamps = false;
+
     protected $fillable = [
         'username',
         'email',
         'password',
+        'nama_lengkap',
+        'jabatan',
+        'telepon',
+        'uker_main',
+        'uker_branch',
+        'uker',
+        'level_id',
+        'active_status',
+        'ip',
     ];
 
     /**
