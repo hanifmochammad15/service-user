@@ -14,8 +14,8 @@ class ResponseFormatter
      */
     protected static $response = [
         //'meta' => [
-            'code' => 200,
             'status' => 'success',
+            'response_code' => 200,
             'message' => null,
         //],
         'data' => null,
@@ -37,7 +37,7 @@ class ResponseFormatter
     public static function error($data = null, $message = null, $code = 400)
     {
         self::$response['status'] = 'error';
-        self::$response['code'] = $code;
+        self::$response['response_code'] = $code;
         self::$response['message'] = $message;
         self::$response['data'] = $data;
 

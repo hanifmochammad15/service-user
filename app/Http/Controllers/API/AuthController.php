@@ -121,19 +121,42 @@ class AuthController extends Controller
             if(!$non_bri)
                 $username = $result;
             else
-                $username = $user->name;
+                $username = $user->username;
 
             //return response()
             //    ->json(['message' => 'Hi '.$username.', welcome to home','access_token' => $token, 'token_type' => 'Bearer', ]);
-            $user['access_token'] = $token;
-            $user['token_type'] = 'Bearer';
+            $data['username'] = $user->username;
+            $data['access_token'] = $token;
+            $data['token_type'] = 'Bearer';
+            $data['list_level'] = User::getLevelId($user->username);
 
-            return ResponseFormatter::success($user,'Hi '.$username.', welcome to home');
+            //dd($data);
+            return ResponseFormatter::success($data,'Hi '.$username.', Pilih Level ID Anda');
 
         }
         return ResponseFormatter::error(null,'Unauthorized',401);
     }
     // method for user logout and delete token
+
+    public function choose_level(Request $request){
+        $validator = Validator::make($request->all(),[
+            //'email' => 'required|string|email|max:255|unique:users',
+            'username' => 'required|string|max:255',
+            'level_id' => 'required|integer|max:99',
+        ]);
+
+        if($validator->fails()){
+            return ResponseFormatter::error(null,$validator->errors(),400);
+        }
+
+        $user = User::Where('username', '=',$request->username)
+        ->where('level_id', '=',$request->level_id)
+        ->first(); //check username first //and get data
+        //where('email', $request['email'])->orWhere('username', '=', $request['email'])->first(); //check username first //and get data
+        return ResponseFormatter::success($user,'Hi '.$user->username.', Welcome Home');
+
+    }
+
     public function logout()
     {
         auth()->user()->tokens()->delete();

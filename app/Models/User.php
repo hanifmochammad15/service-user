@@ -2,11 +2,12 @@
 
 namespace App\Models;
 
+use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
@@ -54,4 +55,16 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function getLevelId($username)
+    {
+        $list_level = DB::table('user_data')
+            ->join('user_level', 'user_data.level_id', '=', 'user_level.level_id')
+            ->select('user_level.level_id', 'user_level.desc')
+            ->where('username',$username)
+            ->groupBy('user_level.level_id')
+            ->get();
+        return $list_level;
+    }
+
 }

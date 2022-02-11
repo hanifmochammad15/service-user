@@ -21,18 +21,22 @@ Route::group(['prefix' => 'v1'], function () {
     Route::post('/register', [App\Http\Controllers\API\AuthController::class, 'register']);
     //API route for login user
     Route::post('/login', [App\Http\Controllers\API\AuthController::class, 'login']);
+    Route::post('/choose_level', [App\Http\Controllers\API\AuthController::class, 'choose_level']);
+    Route::post('/logout', [App\Http\Controllers\API\AuthController::class, 'logout']);
+
+    //API route for users
+    Route::resource('users', App\Http\Controllers\API\UserController::class);
 
 });
 
 //Protecting Routes
 Route::group(['prefix' => 'v1','middleware' => ['auth:sanctum']], function () {
     // API route for logout user
-    Route::post('/logout', [App\Http\Controllers\API\AuthController::class, 'logout']);
-    //Test LDAP
-    Route::get('/profile', function(Request $request) {
-        $user=DB::table('users')->paginate(3);
-        // $user=DB::table('users')->first();
-        return ResponseFormatter::success($user,null);
+    // //Test LDAP
+    // Route::get('/profile', function(Request $request) {
+    //     $user=DB::table('users')->paginate(3);
+    //     // $user=DB::table('users')->first();
+    //     return ResponseFormatter::success($user,null);
 
-    });
+    // });
 });
