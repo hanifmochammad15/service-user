@@ -26,7 +26,9 @@ Route::group(['prefix' => 'v1'], function () {
 
     //API route for users
     Route::resource('users', App\Http\Controllers\API\UserController::class);
-
+    // Refresh Token
+    Route::post('/refresh-tokens', [App\Http\Controllers\API\AuthController::class, 'refreshToken']);
+    Route::get('/refresh-tokens', [App\Http\Controllers\API\AuthController::class, 'getRefreshToken']);
 });
 
 //Protecting Routes

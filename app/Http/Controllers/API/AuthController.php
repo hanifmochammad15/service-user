@@ -1,14 +1,16 @@
 <?php
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Auth;
-use Validator;
 use App\Models\User;
-use Vendor\econea\nusoap\src\nusoap;
+use App\Models\RefreshToken;
+use Illuminate\Http\Request;
 use App\Helpers\ResponseFormatter;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Vendor\econea\nusoap\src\nusoap;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Validator as Enter;
 
 class AuthController extends Controller
 {
@@ -74,7 +76,7 @@ class AuthController extends Controller
 
         if($validator->fails()){
 
-            return ResponseFormatter::error(null,$validator->errors(),400);
+            return ResponseFormatter::error($validator->errors(),"Validation Errors",400);
 
         }
 
@@ -117,7 +119,7 @@ class AuthController extends Controller
             $result = true;
         }
         if ($result){
-            $token = $user->createToken('auth_token')->plainTextToken;
+            //$token = $user->createToken('auth_token')->plainTextToken;
             if(!$non_bri)
                 $username = $result;
             else
@@ -126,8 +128,10 @@ class AuthController extends Controller
             //return response()
             //    ->json(['message' => 'Hi '.$username.', welcome to home','access_token' => $token, 'token_type' => 'Bearer', ]);
             $data['username'] = $user->username;
-            $data['access_token'] = $token;
-            $data['token_type'] = 'Bearer';
+            // $data['id'] = $user->id;
+            $data['choose_level'] = 0;
+            // $data['access_token'] = $token;
+            // $data['token_type'] = 'Bearer';
             $data['list_level'] = User::getLevelId($user->username);
 
             //dd($data);
@@ -146,23 +150,55 @@ class AuthController extends Controller
         ]);
 
         if($validator->fails()){
-            return ResponseFormatter::error(null,$validator->errors(),400);
+            return ResponseFormatter::error($validator->errors(),"Validation Errors",400);
         }
 
         $user = User::Where('username', '=',$request->username)
         ->where('level_id', '=',$request->level_id)
         ->first(); //check username first //and get data
+        $user['choose_level']=1;
         //where('email', $request['email'])->orWhere('username', '=', $request['email'])->first(); //check username first //and get data
         return ResponseFormatter::success($user,'Hi '.$user->username.', Welcome Home');
 
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
-        auth()->user()->tokens()->delete();
+        $user_id=$request->user_id;
+        $user=User::where("id",$user_id);
+        if (!$user->exists()) {
+            return ResponseFormatter::error(null,"your user not found",400);
+        }
+        $refreshToken=RefreshToken::where("user_id",$user_id)->first();
+        $refreshToken->delete();
 
-        return [
-            'message' => 'You have successfully logged out and the token was successfully deleted'
-        ];
+        return ResponseFormatter::success(null,'You have successfully logged out and the token was successfully deleted');
+    }
+
+    public function refreshToken(Request $request)
+    {
+        $validator = Validator::make($request->all(),[
+            'refresh_token' => 'required|string',
+            'user_id' => 'required|integer',
+        ]);
+
+        if($validator->fails()){
+            return ResponseFormatter::error($validator->errors(),"Validation error",400);
+        }
+        $data["token"]=$request->refresh_token;
+        $data["user_id"]=$request->user_id;
+        $refreshToken=RefreshToken::updateOrCreate(["user_id" => $data["user_id"]],$data);
+        return ResponseFormatter::success($refreshToken->id,'success create refresh token');
+    }
+
+    public function getRefreshToken(Request $request)
+    {
+        $refreshToken=$request->get('refresh_token');
+        $token=RefreshToken::where("token",$refreshToken);
+        if(!$token->exists()){
+            return ResponseFormatter::error(null,"your token not found",400);
+        }
+        return ResponseFormatter::success($token->first(),'success create refresh token');
+
     }
 }
